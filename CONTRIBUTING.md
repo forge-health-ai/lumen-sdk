@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Reporting Issues
 
-1. **Check existing issues** — Search [GitHub Issues](https://github.com/braebrae88/lumen-sdk/issues) to avoid duplicates
+1. **Check existing issues** — Search [GitHub Issues](https://github.com/forge-health-ai/lumen-sdk/issues) to avoid duplicates
 2. **Use issue templates** — Fill out the appropriate template completely
 3. **Provide context** — Include version, environment, and reproduction steps
 

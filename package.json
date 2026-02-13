@@ -1,6 +1,13 @@
 {
   "name": "@forgehealth/lumen-sdk",
   "version": "1.0.4",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/forge-health-ai/lumen-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/forge-health-ai/lumen-sdk/issues"
+  },
   "description": "LUMEN SDK™ - Defensible AI Decisions for Healthcare. Runtime governance that doesn't slow clinicians down.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

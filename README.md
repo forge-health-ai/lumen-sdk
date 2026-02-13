@@ -24,7 +24,7 @@ When IT implements restrictive governance, clinicians bypass it (remember WhatsA
 LUMEN operates **alongside** AI processes — scoring, recording, never blocking:
 
 ```typescript
-import { Lumen } from '@forge/lumen-sdk';
+import { Lumen } from '@forgehealth/lumen-sdk';
 
 const lumen = new Lumen({ 
   domain: 'healthcare', 
@@ -97,17 +97,17 @@ A human-readable certificate (like the one you can export as PDF):
 ## Installation
 
 ```bash
-npm install @forge/lumen-sdk
+npm install @forgehealth/lumen-sdk
 # or
-yarn add @forge/lumen-sdk
+yarn add @forgehealth/lumen-sdk
 # or
-pnpm add @forge/lumen-sdk
+pnpm add @forgehealth/lumen-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { Lumen } from '@forge/lumen-sdk';
+import { Lumen } from '@forgehealth/lumen-sdk';
 
 // Initialize
 const lumen = new Lumen({
@@ -257,7 +257,7 @@ LUMEN SDK™ is built by [Forge Health](https://forgehealth.ai) — AI Activatio
 **Ready to make AI decisions defensible?**
 
 ```bash
-npm install @forge/lumen-sdk
+npm install @forgehealth/lumen-sdk
 ```
 
-[Documentation](https://forgelumen.ca/docs) · [API Reference](https://forgelumen.ca/docs/api) · [Contact](mailto:lumen-sdk@forgehealth.ai)
+[Documentation](https://github.com/forge-health-ai/lumen-sdk#readme) · [API Reference](https://github.com/forge-health-ai/lumen-sdk/blob/main/docs/API_REFERENCE.md) · [Contact](mailto:lumen-sdk@forgehealth.ai)

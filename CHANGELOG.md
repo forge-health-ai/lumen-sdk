@@ -7,11 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-02-13
+
+### Changed
+- Migrated repository to `forge-health-ai` GitHub organization
+- Updated all documentation links and references
+- Cleaned repository history for production readiness
+
+## [1.0.3] - 2026-02-12
+
+### Changed
+- Updated all package references to `forge-health-ai` organization
+- Removed internal architecture documents from public repository
+
+## [1.0.2] - 2026-02-12
+
+### Added
+- Comprehensive API reference documentation (`docs/API_REFERENCE.md`)
+
+## [1.0.1] - 2026-02-12
+
+### Fixed
+- README headline, contact email, documentation links, npm badge
+
 ## [1.0.0] - 2026-02-12
 
 ### Added
 
-#### Core Primitives (DDRL - Defensible Decision Record Layer)
+#### Core Primitives (DDRL — Defensible Decision Record Layer)
 - **DecisionRecord** — Canonical representation of a decision moment (human + AI + context)
 - **PolicyPack** — Versioned governance artifacts with compliance rules (PHIPA, HIPAA, NIST)
 - **Evaluation** — Deterministic evaluation results with LUMEN Score™
@@ -35,7 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Swagger/OpenAPI documentation
 
 #### Documentation
-- Architecture documentation with system diagrams
 - Security & compliance documentation (SOC 2 aligned)
 - Integration guide with code examples
 
@@ -49,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript SDK with full type definitions
 - ESM and CommonJS builds
 - CI/CD pipeline (GitHub Actions)
-- npm package ready (`@forge/lumen-sdk`)
+- npm package: `@forgehealth/lumen-sdk`
 
 ---
 
@@ -57,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.0.4 | 2026-02-13 | Repository migration and documentation cleanup |
+| 1.0.3 | 2026-02-12 | Organization transfer to forge-health-ai |
+| 1.0.2 | 2026-02-12 | API reference documentation |
+| 1.0.1 | 2026-02-12 | README and link fixes |
 | 1.0.0 | 2026-02-12 | Initial release — Core primitives, LUMEN Score™, API |
 
 ---
@@ -65,7 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 1.1.0 (Planned)
 - Citation Integrity Engine
-- Google Vertex AI Judge Model integration
 - Additional LLM adapters (OpenAI, Anthropic, Azure)
 
 ### 1.2.0 (Planned)
@@ -81,5 +106,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/braebrae88/lumen-sdk/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/braebrae88/lumen-sdk/releases/tag/v1.0.0
+[Unreleased]: https://github.com/forge-health-ai/lumen-sdk/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/forge-health-ai/lumen-sdk/compare/v1.0.3...v1.0.4
+[1.0.3]: https://github.com/forge-health-ai/lumen-sdk/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/forge-health-ai/lumen-sdk/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/forge-health-ai/lumen-sdk/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/forge-health-ai/lumen-sdk/releases/tag/v1.0.0

@@ -350,6 +350,6 @@ Keep compliance packs current as regulations change.
 
 ## Support
 
-- Documentation: https://docs.forgelumen.ca
-- API Status: https://status.forgelumen.ca
+- Documentation: https://github.com/forge-health-ai/lumen-sdk#readme
+- API Status: https://forgehealth.ai
 - Support: support@forgehealth.ai
