@@ -1,0 +1,58 @@
+{
+  "name": "@forgehealth/lumen-sdk",
+  "version": "1.0.4",
+  "description": "LUMEN SDK™ - Defensible AI Decisions for Healthcare. Runtime governance that doesn't slow clinicians down.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "governance",
+    "healthcare",
+    "compliance",
+    "phipa",
+    "hipaa",
+    "audit",
+    "llm",
+    "clinical",
+    "decision-support",
+    "nist",
+    "defensible",
+    "lumen"
+  ],
+  "author": "Forge Health Inc. <lumen-sdk@forgehealth.ai>",
+  "license": "Apache-2.0",
+  "homepage": "https://forgelumen.ca",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "eslint": "^8.55.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}
