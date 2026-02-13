@@ -227,7 +227,7 @@ LUMEN is built on four primitives:
 3. **Evaluation** — Deterministic evaluation result
 4. **AuditEvent** — Immutable audit trail
 
-[See full architecture →](docs/ARCHITECTURE.md)
+See SDK source code for architecture details.
 
 ## Enterprise
 

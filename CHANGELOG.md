@@ -36,10 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Documentation
 - Architecture documentation with system diagrams
-- ADRs (Architecture Decision Records) for scoring kernel, constraint engine, RAG integration
 - Security & compliance documentation (SOC 2 aligned)
 - Integration guide with code examples
-- Google Judge Model integration blueprint
 
 ### Security
 - Cryptographic hashing (SHA-256) for decision records

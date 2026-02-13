@@ -104,20 +104,6 @@ npm test -- src/scoring/LumenScore.test.ts
 - Test edge cases and error conditions
 - Mock external dependencies
 
-## Architecture Decision Records (ADRs)
-
-For significant architectural changes, create an ADR:
-
-```
-docs/ADR/
-├── 001-scoring-kernel.md
-├── 002-constraint-engine.md
-└── NNN-your-decision.md
-```
-
-Use the template:
-- **Status**: Proposed / Accepted / Deprecated
-- **Context**: Why is this decision needed?
 - **Decision**: What did we decide?
 - **Consequences**: What are the tradeoffs?
 
