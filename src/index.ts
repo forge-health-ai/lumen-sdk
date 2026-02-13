@@ -177,22 +177,67 @@ export interface AssuranceCertificate {
 }
 
 /**
+ * Load configuration from .lumenrc.json
+ * Searches current directory, then walks up to root.
+ * Returns null if no config file found (never throws).
+ */
+function loadConfigFile(): Partial<LumenConfig> | null {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    let dir = process.cwd();
+    const root = path.parse(dir).root;
+    
+    while (dir !== root) {
+      const configPath = path.join(dir, '.lumenrc.json');
+      if (fs.existsSync(configPath)) {
+        const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+        return {
+          domain: raw.domain || 'healthcare',
+          region: raw.region || 'canada',
+          apiKey: raw.apiKey || undefined,
+          enforcementMode: raw.enforcementMode || 'ADVISORY',
+        };
+      }
+      dir = path.dirname(dir);
+    }
+  } catch {
+    // Config loading must never break the SDK
+  }
+  return null;
+}
+
+/**
  * LUMEN SDK - Main Class
  * 
  * The primary interface for LUMEN governance.
  * Evaluates AI decisions and generates defensible records.
+ * 
+ * Config resolution order:
+ *   1. Explicit constructor config (highest priority)
+ *   2. .lumenrc.json (created by `npx @forgehealth/lumen-sdk init`)
+ *   3. Defaults (healthcare, canada, ADVISORY)
  */
 export class Lumen {
   private config: LumenConfig;
   private auditChain: AuditChain;
   private sessionId: string;
   
-  constructor(config: LumenConfig) {
-    this.config = {
+  constructor(config?: Partial<LumenConfig>) {
+    const fileConfig = loadConfigFile();
+    const defaults: LumenConfig = {
+      domain: 'healthcare',
+      region: 'canada',
       enforcementMode: 'ADVISORY',
-      tenantId: 'default',
-      ...config
     };
+    
+    this.config = {
+      ...defaults,
+      ...(fileConfig || {}),
+      ...(config || {}),
+      tenantId: config?.tenantId || 'default',
+    } as LumenConfig;
     
     this.sessionId = this.generateSessionId();
     this.auditChain = new AuditChain(
@@ -204,12 +249,12 @@ export class Lumen {
     this.auditChain.append(
       'SESSION_STARTED',
       systemActor('LumenSDK'),
-      { config: { domain: config.domain, region: config.region } }
+      { config: { domain: this.config.domain, region: this.config.region } }
     );
     
     if (this.config.debug) {
       console.log(`[LUMEN-SDK] Initialized v${SDK_VERSION}`);
-      console.log(`[LUMEN-SDK] Domain: ${config.domain}, Region: ${config.region}`);
+      console.log(`[LUMEN-SDK] Domain: ${this.config.domain}, Region: ${this.config.region}`);
     }
   }
   
