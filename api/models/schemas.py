@@ -1,7 +1,10 @@
-"""Pydantic models for LUMEN SDK API request/response schemas."""
+"""Pydantic models for LUMEN SDK API request/response schemas.
+
+Copyright 2026 Forge Partners Inc.
+"""
 
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -82,3 +85,61 @@ class HealthResponse(BaseModel):
     status: str = "healthy"
     version: str
     service: str = "lumen-sdk-api"
+    timestamp: str = Field(..., description="Health check timestamp")
+    uptime: float = Field(..., description="Uptime in seconds")
+    supabase_healthy: bool = Field(..., description="Supabase connection status")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "status": "healthy",
+                "version": "1.0.0",
+                "service": "lumen-sdk-api",
+                "timestamp": "2026-02-13T15:30:00Z",
+                "uptime": 3600.0,
+                "supabase_healthy": True
+            }
+        }
+    }
+
+
+class ErrorResponse(BaseModel):
+    """Standard error response schema."""
+    message: str = Field(..., description="Error message")
+    error_code: Optional[str] = Field(None, description="Machine-readable error code")
+    details: Optional[dict] = Field(None, description="Additional error details")
+    timestamp: str = Field(..., description="Error timestamp")
+    request_id: Optional[str] = Field(None, description="Request identifier for tracking")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "message": "API key not found or invalid",
+                "error_code": "INVALID_API_KEY",
+                "details": {"key_prefix": "lumen_pk_test_"},
+                "timestamp": "2026-02-13T15:30:00Z",
+                "request_id": "req_abc123"
+            }
+        }
+    }
+
+
+class RateLimitResponse(BaseModel):
+    """Rate limit exceeded response schema."""
+    message: str = Field(..., description="Rate limit message")
+    limit: int = Field(..., description="Rate limit per window")
+    remaining: int = Field(0, description="Requests remaining (always 0 when exceeded)")
+    reset: int = Field(..., description="Unix timestamp when limit resets")
+    retry_after: int = Field(..., description="Seconds to wait before retry")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "message": "Rate limit exceeded",
+                "limit": 100,
+                "remaining": 0,
+                "reset": 1708789200,
+                "retry_after": 60
+            }
+        }
+    }

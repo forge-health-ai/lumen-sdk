@@ -1,0 +1,73 @@
+# LUMEN SDK API Docker Compose
+# Copyright 2026 Forge Partners Inc.
+
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: lumen-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - lumen-network
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Optional: Redis for distributed rate limiting
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: lumen-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - lumen-network
+
+  # Optional: PostgreSQL for local development
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: lumen-postgres
+  #   environment:
+  #     POSTGRES_DB: lumen_db
+  #     POSTGRES_USER: lumen_user
+  #     POSTGRES_PASSWORD: lumen_password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - lumen-network
+
+networks:
+  lumen-network:
+    driver: bridge
+
+volumes:
+  # redis-data:
+  # postgres-data:
+  logs:

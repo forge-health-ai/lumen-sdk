@@ -1,157 +1,237 @@
 # LUMEN SDK API
 
-Production-ready FastAPI backend for the LUMEN SDK — Defensible AI Decisions for Healthcare.
+Enterprise-grade API for AI output evaluation and defensible record generation in healthcare applications.
 
-## Quick Start
+**Copyright 2026 Forge Partners Inc.**
 
-### Local Development
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.12+
+- Supabase account and project
+- Environment variables configured (see `.env.example`)
+
+### Installation
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+# Clone and setup
+git clone <repository-url>
+cd lumen-sdk/api
 
 # Install dependencies
 pip install -r requirements.txt
 
+# Configure environment
+cp .env.example .env
+# Edit .env with your Supabase credentials
+
 # Run development server
 python main.py
-# or
-uvicorn main:app --reload --port 8000
 ```
 
-API available at: http://localhost:8000
-
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-- OpenAPI JSON: http://localhost:8000/openapi.json
-
-### Docker
+### Docker Deployment
 
 ```bash
-# Build image
-docker build -t lumen-sdk-api .
+# Build and run with Docker Compose
+docker-compose up --build
 
-# Run container
-docker run -p 8000:8000 lumen-sdk-api
+# Or build manually
+docker build -t lumen-api .
+docker run -p 8000:8000 --env-file .env lumen-api
 ```
 
-## API Endpoints
+## 📚 API Documentation
 
-### Health Check
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **OpenAPI Spec**: http://localhost:8000/openapi.json
+
+## 🔑 Authentication
+
+### API Keys
+
+All evaluation endpoints require API key authentication:
+
 ```bash
-GET /health
+curl -X POST https://api.lumen.forge.health/v1/evaluate \
+  -H "X-API-Key: lumen_pk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ai_output": "Patient shows signs of...",
+    "human_action": "accepted",
+    "compliance_packs": ["ca-on-phipa", "us-fed-hipaa"]
+  }'
 ```
 
-Returns service health status. No authentication required.
+### JWT Tokens
 
-### Evaluate AI Output
+Portal management endpoints require JWT authentication from Supabase:
+
 ```bash
-POST /v1/evaluate
-X-API-Key: your-api-key
-Content-Type: application/json
-
-{
-  "ai_output": "Patient diagnosis suggests Type 2 Diabetes...",
-  "context": {"session_id": "abc123"},
-  "human_action": "accepted",
-  "compliance_packs": ["phipa"]
-}
+curl -X POST https://api.lumen.forge.health/v1/keys/generate \
+  -H "Authorization: Bearer <supabase-jwt>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production API Key",
+    "environment": "live"
+  }'
 ```
 
-Response:
-```json
-{
-  "record_id": "550e8400-e29b-41d4-a716-446655440000",
-  "lumen_score": 85,
-  "tier": 1,
-  "verdict": "ALLOW",
-  "citation_integrity": 0.95,
-  "defensible_record_url": "https://api.forgelumen.ca/v1/records/550e8400..."
-}
+## 🛡️ Policy Packs
+
+Six comprehensive compliance packs:
+
+| Pack ID | Name | Jurisdiction | Tier | Checks |
+|---------|------|--------------|------|--------|
+| `ca-on-phipa` | Ontario PHIPA Healthcare | Canada — Ontario | Free | 15 |
+| `us-fed-hipaa` | US Federal HIPAA Compliance | United States — Federal | Free | 18 |
+| `ca-fed-pipeda` | Canada Federal PIPEDA | Canada — Federal | Free | 12 |
+| `us-fed-fda-aiml` | US FDA AI/ML Medical Device | United States — FDA | Pro | 14 |
+| `us-fed-nist-ai` | NIST AI Risk Management | United States — Federal | Free | 10 |
+| `eu-ai-act` | EU AI Act Compliance | European Union | Pro | 16 |
+
+## 📊 Rate Limits & Usage
+
+### Plan Limits
+
+| Plan | Rate Limit | Monthly Evaluations | API Keys | Policy Packs |
+|------|------------|-------------------|----------|-------------|
+| Free | 100/minute | 1,000 | 2 | 2 |
+| Pro  | 1,000/minute | 50,000 | 10 | All |
+
+### Headers
+
+All responses include usage headers:
+
+- `X-RateLimit-Limit`: Requests per minute
+- `X-RateLimit-Remaining`: Remaining in current window
+- `X-Lumen-Usage-Used`: Evaluations used this month
+- `X-Lumen-Usage-Warning`: Warning when approaching limits
+
+## 🏗️ Architecture
+
+### Core Components
+
+- **FastAPI**: Web framework with automatic OpenAPI docs
+- **Supabase**: Backend-as-a-Service for auth and data
+- **bcrypt**: Secure API key hashing
+- **Pydantic**: Request/response validation
+- **Custom Middleware**: Rate limiting and usage tracking
+
+### Security Features
+
+- **API Key Authentication**: bcrypt-hashed keys with prefix indexing
+- **JWT Verification**: Supabase-based portal authentication  
+- **Rate Limiting**: Sliding window with plan-based limits
+- **Usage Tracking**: Monthly evaluation counting
+- **CORS**: Configured for production origins
+- **Environment Isolation**: Separate keys for dev/test/live
+
+### Database Schema
+
+Required Supabase tables:
+
+```sql
+-- Organizations
+CREATE TABLE organizations (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  plan TEXT NOT NULL CHECK (plan IN ('free', 'pro')),
+  owner_id UUID REFERENCES auth.users(id),
+  legal_acknowledgment BOOLEAN DEFAULT FALSE,
+  legal_acknowledgment_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- API Keys
+CREATE TABLE api_keys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID REFERENCES organizations(id),
+  name TEXT NOT NULL,
+  environment TEXT NOT NULL CHECK (environment IN ('live', 'test', 'dev')),
+  key_prefix TEXT NOT NULL,
+  key_hash TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
+  allowed_origins TEXT[],
+  ip_allowlist TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  last_used_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ
+);
+
+-- Usage Tracking
+CREATE TABLE api_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID REFERENCES organizations(id),
+  period_start TIMESTAMPTZ NOT NULL,
+  evaluations_count INTEGER DEFAULT 0,
+  last_evaluation_at TIMESTAMPTZ
+);
+
+-- Enabled Policy Packs
+CREATE TABLE organization_packs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID REFERENCES organizations(id),
+  pack_id TEXT NOT NULL,
+  enabled BOOLEAN DEFAULT TRUE,
+  enabled_at TIMESTAMPTZ DEFAULT NOW(),
+  disabled_at TIMESTAMPTZ
+);
 ```
 
-### Get Record by ID
+## 🧪 Testing
+
 ```bash
-GET /v1/records/{record_id}
-X-API-Key: your-api-key
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+
+# Run specific test file
+pytest tests/test_enterprise.py
+
+# Run specific test
+pytest tests/test_enterprise.py::TestPolicyPacks::test_list_packs_public
 ```
 
-Returns a specific defensible decision record.
+## 🚀 Deployment
 
-### List Records
-```bash
-GET /v1/records?skip=0&limit=10
-X-API-Key: your-api-key
+### Environment Variables
+
+Required for production:
+
+```env
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIs...
+CORS_ORIGINS=https://developer.forgelumen.ca
+API_VERSION=1.0.0
+LOG_LEVEL=info
 ```
 
-Returns paginated list of decision records.
+### Health Checks
 
-## Authentication
+- `/health` - Comprehensive health with DB status
+- `/health/ready` - Kubernetes readiness probe
+- `/health/live` - Kubernetes liveness probe
 
-All endpoints except `/health` require an API key via the `X-API-Key` header.
+### Monitoring
 
-**Development keys** (for local testing only):
-- `lumen-dev-key-001`
-- `lumen-test-key-001`
+- Structured JSON logging
+- Automatic error tracking
+- Usage analytics
+- Performance metrics
 
-> ⚠️ Production deployments must use secure, rotated API keys.
+## 📞 Support
 
-## Project Structure
+- **Documentation**: `/docs` endpoint (Swagger UI)
+- **Developer Portal**: https://developer.forgelumen.ca  
+- **Support Email**: support@forgelumen.ca
+- **Status Page**: Monitor API health and incidents
 
-```
-api/
-├── main.py              # FastAPI application entry point
-├── routes/
-│   ├── evaluate.py      # POST /v1/evaluate
-│   ├── records.py       # GET /v1/records, GET /v1/records/{id}
-│   └── health.py        # GET /health
-├── auth/
-│   └── api_keys.py      # API key validation
-├── models/
-│   └── schemas.py       # Pydantic request/response models
-├── requirements.txt     # Python dependencies
-├── Dockerfile           # Production container image
-└── README.md
-```
+---
 
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `8000` |
-| `RECORDS_BASE_URL` | Base URL for record links | `https://api.forgelumen.ca/v1/records` |
-
-## Roadmap
-
-The following enhancements are planned for future releases:
-
-| Feature | Target Version | Status |
-|---------|----------------|--------|
-| Full scoring engine integration | v1.1.0 | In Progress |
-| PostgreSQL persistence | v1.1.0 | Planned |
-| Production API key management | v1.1.0 | Planned |
-| Compliance pack engine | v1.2.0 | Planned |
-| Rate limiting | v1.1.0 | Planned |
-| Structured logging | v1.1.0 | Planned |
-| Metrics/monitoring | v1.2.0 | Planned |
-
-See [CHANGELOG.md](../CHANGELOG.md) for release history and upcoming features.
-
-## Current Implementation Note
-
-This v1.0.0 release provides the API structure and contract with simplified scoring logic. 
-The full LUMEN Score™ algorithm (MCDA + Monte Carlo + NIST weighting) is implemented in the 
-TypeScript SDK (`src/scoring/LumenScore.ts`) and will be integrated in v1.1.0.
-
-The current API demonstrates:
-- Complete request/response contracts
-- Authentication flow
-- Record structure
-- Defensible record generation
-
-## License
-
-Apache-2.0 — See [LICENSE](../LICENSE)
-
-Copyright 2026 Forge Partners Inc.
+**LUMEN SDK API** - Defensible AI compliance for healthcare applications  
+Copyright 2026 Forge Partners Inc. | All rights reserved
