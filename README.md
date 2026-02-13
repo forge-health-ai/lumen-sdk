@@ -94,15 +94,60 @@ A human-readable certificate (like the one you can export as PDF):
 └─────────────────────────────────────────────────┘
 ```
 
-## Installation
+## Getting Started
+
+### Step 1: Install the SDK
 
 ```bash
 npm install @forgehealth/lumen-sdk
-# or
-yarn add @forgehealth/lumen-sdk
-# or
-pnpm add @forgehealth/lumen-sdk
 ```
+
+### Step 2: Choose Your Policy Packs
+
+Policy packs contain jurisdiction-specific governance rules. Pick the packs that match your regulatory environment:
+
+| Pack | Jurisdiction | Covers |
+|------|-------------|--------|
+| `ca-on-phipa` | Ontario, Canada | PHIPA, Ontario privacy |
+| `ca-fed-pipeda` | Canada (federal) | PIPEDA, Bill C-27/AIDA |
+| `us-fed-hipaa` | United States | HIPAA, HITECH |
+| `us-fed-fda-aiml` | United States | FDA AI/ML SaMD guidance |
+| `us-fed-nist-ai` | United States | NIST AI RMF 1.0 |
+| `eu-ai-act` | European Union | EU AI Act |
+
+The SDK ships with bundled packs. For **continuously updated packs** powered by our Legislative Intelligence Scanner, connect to the hosted API.
+
+### Step 3: Get an API Key (Optional — For Hosted Packs)
+
+Free tier gives you 1,000 evaluations/month with 2 policy packs.
+
+1. Visit **[forgelumen.ca/developer](https://forgelumen.ca/developer)**
+2. Create an account
+3. Select your policy packs
+4. Generate your API key
+5. Add to your environment: `LUMEN_API_KEY=lumen_pk_...`
+
+Without an API key, the SDK runs fully offline using bundled policy packs (updated with each npm release).
+
+### Step 4: Evaluate
+
+```typescript
+import { Lumen } from '@forgehealth/lumen-sdk';
+
+const lumen = new Lumen({
+  domain: 'healthcare',
+  region: 'canada',
+  apiKey: process.env.LUMEN_API_KEY  // optional
+});
+
+const result = await lumen.evaluate({
+  aiOutput: modelResponse,
+  context: clinicalContext,
+  humanAction: 'accepted'
+});
+```
+
+> ⚠️ **Important:** Read the [Healthcare Disclaimer](HEALTHCARE_DISCLAIMER.md) and [Terms of Service](TERMS_OF_SERVICE.md) before deploying in clinical environments. LUMEN is a governance tool — not a clinical decision support system.
 
 ## Quick Start
 
@@ -240,11 +285,25 @@ For enterprise deployments (on-prem, air-gapped, custom compliance):
 
 Contact: lumen-sdk@forgehealth.ai
 
+## Legal & Compliance
+
+- **[Terms of Service](TERMS_OF_SERVICE.md)** — Binding terms for SDK, API, and hosted services
+- **[Healthcare Disclaimer](HEALTHCARE_DISCLAIMER.md)** — Critical disclaimers for clinical environments
+- **[Security Policy](SECURITY.md)** — Vulnerability disclosure process
+- **[License](LICENSE)** — Apache 2.0
+
+**Key points:**
+- LUMEN is a governance tool, NOT a medical device or clinical decision support system
+- LUMEN Scores are governance indicators, NOT clinical safety ratings or compliance certifications
+- Users are solely responsible for clinical decisions and regulatory compliance
+- Do NOT submit PHI/PII to LUMEN Services
+- Forge Partners Inc. bears no liability for clinical outcomes
+
 ## License
 
 Apache 2.0 — See [LICENSE](LICENSE)
 
-Core SDK is open source. Enterprise features (Sidecar, CHAIN, Risk Transfer) are proprietary.
+Core SDK is open source. Hosted Policy Packs, Legislative Intelligence, and Enterprise features are proprietary to Forge Partners Inc.
 
 ## About
 
