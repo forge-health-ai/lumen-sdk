@@ -1,4 +1,4 @@
-# Copyright 2026 Forge Health Inc.
+# Copyright 2026 Forge Partners Inc.
 # Licensed under the Apache License, Version 2.0
 
 """Health endpoint tests for LUMEN SDK API."""

@@ -5,7 +5,7 @@
  * These primitives are the foundation of LUMEN's governance model.
  * 
  * @module @forge/lumen-sdk
- * @copyright 2026 Forge Health Inc.
+ * @copyright 2026 Forge Partners Inc.
  * @license Apache-2.0
  */
 

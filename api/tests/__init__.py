@@ -1,2 +1,2 @@
 # LUMEN SDK API Tests
-# Copyright 2026 Forge Health Inc.
+# Copyright 2026 Forge Partners Inc.

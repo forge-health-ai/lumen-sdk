@@ -154,4 +154,4 @@ The current API demonstrates:
 
 Apache-2.0 — See [LICENSE](../LICENSE)
 
-Copyright 2026 Forge Health Inc.
+Copyright 2026 Forge Partners Inc.

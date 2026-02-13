@@ -6,7 +6,7 @@
  * through hash linking.
  * 
  * @module @forge/lumen-sdk
- * @copyright 2026 Forge Health Inc.
+ * @copyright 2026 Forge Partners Inc.
  * @license Apache-2.0
  */
 

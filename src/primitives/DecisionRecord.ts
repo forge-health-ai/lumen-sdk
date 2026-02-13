@@ -8,7 +8,7 @@
  * PHI never transits through LUMEN by default.
  * 
  * @module @forge/lumen-sdk
- * @copyright 2026 Forge Health Inc.
+ * @copyright 2026 Forge Partners Inc.
  * @license Apache-2.0
  */
 

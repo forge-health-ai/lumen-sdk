@@ -1,7 +1,7 @@
 /**
  * LUMEN SDK Tests
  * 
- * @copyright Forge Health Inc. 2026
+ * @copyright Forge Partners Inc. 2026
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';

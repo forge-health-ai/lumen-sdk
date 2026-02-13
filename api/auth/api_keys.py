@@ -10,7 +10,7 @@ Production Implementation (v1.1.0+):
 - Usage tracking and rate limiting
 - Scope-based permissions
 
-Copyright 2026 Forge Health Inc.
+Copyright 2026 Forge Partners Inc.
 """
 
 from fastapi import HTTPException, Security, status

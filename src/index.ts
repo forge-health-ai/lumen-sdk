@@ -6,7 +6,7 @@
  * Runtime governance that doesn't slow clinicians down.
  * Every AI decision gets an auditable record.
  * 
- * @copyright 2026 Forge Health Inc.
+ * @copyright 2026 Forge Partners Inc.
  * @license Apache-2.0
  * @see https://github.com/braebrae88/lumen-sdk
  * 
@@ -29,7 +29,7 @@
  * console.log(result.auditUrl);    // Defensible record URL
  * ```
  * 
- * @copyright Forge Health Inc. 2026
+ * @copyright Forge Partners Inc. 2026
  * @license Apache-2.0 (Core SDK)
  */
 
