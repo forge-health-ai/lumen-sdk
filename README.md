@@ -121,7 +121,7 @@ The SDK ships with bundled packs. For **continuously updated packs** powered by 
 
 Free tier gives you 1,000 evaluations/month with 2 policy packs.
 
-1. Visit **[forgelumen.ca/developer](https://forgelumen.ca/developer)**
+1. Visit **[developer.forgelumen.ca](https://developer.forgelumen.ca)**
 2. Create an account
 3. Select your policy packs
 4. Generate your API key

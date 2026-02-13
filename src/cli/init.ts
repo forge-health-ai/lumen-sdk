@@ -22,9 +22,9 @@ import * as https from 'https';
 // ============================================================================
 
 const CONFIG_FILENAME = '.lumenrc.json';
-const PORTAL_URL = 'https://forgelumen.ca/developer';
-const TOS_URL = 'https://forgelumen.ca/terms-of-service';
-const DISCLAIMER_URL = 'https://forgelumen.ca/healthcare-disclaimer';
+const PORTAL_URL = 'https://developer.forgelumen.ca';
+const TOS_URL = 'https://developer.forgelumen.ca/terms-of-service';
+const DISCLAIMER_URL = 'https://developer.forgelumen.ca/healthcare-disclaimer';
 const DOCS_URL = 'https://github.com/forge-health-ai/lumen-sdk#readme';
 
 interface LumenRcConfig {
