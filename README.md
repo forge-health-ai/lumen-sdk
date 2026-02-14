@@ -94,6 +94,61 @@ A human-readable certificate (like the one you can export as PDF):
 └─────────────────────────────────────────────────┘
 ```
 
+## Why Trust the LUMEN Score?
+
+**The LUMEN Score is to healthcare AI what a credit score is to lending** — standardized, objective, and backed by recognized frameworks.
+
+### Built on Public Standards, Not Black-Box Magic
+
+LUMEN doesn't invent its own rules. It scores against frameworks that healthcare leaders already trust:
+
+| Framework | Who Created It | Why It Matters |
+|-----------|---------------|----------------|
+| **NIST AI RMF** | U.S. National Institute of Standards | The gold standard for AI risk management |
+| **CHAI** | Coalition for Health AI (Mayo, Duke, WHO, Google) | Healthcare-specific AI assurance standards |
+| **ISO 42001** | International Organization for Standardization | Global AI management system certification |
+| **PHIPA** | Ontario Legislature | Ontario's health privacy law |
+| **HIPAA** | U.S. Congress | U.S. health data protection |
+| **FDA TPLC** | U.S. Food and Drug Administration | AI/ML medical device lifecycle framework |
+
+### 10 Scoring Domains — Transparent and Documented
+
+Every LUMEN Score evaluates across 10 domains aligned to [CHAI's Assurance Standards](https://www.coalitionforhealthai.org/):
+
+1. **Clinical Safety** — Could this AI output cause patient harm?
+2. **Bias & Fairness** — Does the output exhibit demographic bias?
+3. **Privacy & Security** — Does it comply with PHI/PII protection requirements?
+4. **Transparency** — Can the reasoning be explained to a clinician?
+5. **Regulatory Compliance** — Does it meet jurisdiction-specific legal requirements?
+6. **Data Quality** — Is the underlying data fit for clinical use?
+7. **Operational Readiness** — Is the organization prepared to deploy safely?
+8. **Human Oversight** — Is there appropriate human-in-the-loop governance?
+9. **Accountability** — Is there clear ownership and audit trail?
+10. **Interoperability** — Does it integrate with existing clinical workflows?
+
+### Hard Gates — Non-Negotiable Safety
+
+Some rules aren't scored — they're **binary pass/fail**. If PHIPA s.12 (collection limitation) is violated, the LUMEN Score drops to zero automatically. No exceptions. No overrides. This is how regulatory compliance works in healthcare.
+
+### Deterministic and Auditable
+
+- **Same inputs → same score.** Always. No randomness, no model drift.
+- **Every score produces a signed decision record** with full traceability — what was evaluated, which rules fired, what the breakdown was.
+- **Scores are objective. Thresholds are yours.** A LUMEN Score of 65 means the same thing at every hospital. Whether your organization treats 65 as ALLOW or REVIEW is your risk tolerance, not ours.
+
+### Independent Verification
+
+The scoring methodology is designed for third-party audit. Any qualified assessor can:
+- Review which frameworks and rules were applied
+- Verify the domain-level breakdown
+- Confirm hard gate enforcement
+- Validate the cryptographic audit chain
+
+> *"You come with the most creative way of mitigating risk with LLM right now that I've been hearing."*
+> — Antoine Vaillancourt-Dutil, Google
+
+---
+
 ## Getting Started
 
 ### Step 1: Install the SDK

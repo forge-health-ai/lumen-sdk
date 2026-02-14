@@ -49,7 +49,32 @@ import {
   type EvaluationMetrics
 } from './primitives';
 
+// Import policy packs and API client
+import {
+  caOnPhipa,
+  usFedHipaa,
+  getPackById,
+  listAvailablePacks,
+  hasBundledPack,
+  type PackEvaluationContext,
+  type PackEvaluationResult
+} from './packs';
+import type { EvaluationContext as PhipaContext } from './packs/ca-on-phipa';
+import type { EvaluationContext as HipaaContext } from './packs/us-fed-hipaa';
+
+import {
+  LumenAPIClient,
+  type LumenAPIClientConfig,
+  type PackSummary,
+  type PackDetails,
+  type PackEvaluationResponse,
+  type UsageStats,
+  LumenAPIError
+} from './api-client';
+
 export * from './primitives';
+export * from './packs';
+export * from './api-client';
 
 // SDK Version
 export const SDK_VERSION = '1.0.0';
@@ -76,6 +101,9 @@ export interface LumenConfig {
   
   /** Enable debug logging */
   debug?: boolean;
+  
+  /** API client configuration (optional, derived from apiKey if not provided) */
+  apiConfig?: Omit<LumenAPIClientConfig, 'apiKey'>;
 }
 
 export interface EvaluateInput {
@@ -134,6 +162,9 @@ export interface EvaluateResult {
   
   /** Assurance certificate data */
   assuranceCertificate: AssuranceCertificate;
+  
+  /** Pack evaluation results (if packs were applied) */
+  packResults?: PackEvaluationResult[];
 }
 
 export interface AssuranceCertificate {
@@ -174,6 +205,43 @@ export interface AssuranceCertificate {
   
   /** Algorithm used for signing */
   algorithm?: string;
+}
+
+export interface EvaluateWithPackResult {
+  /** Decision record from evaluation */
+  decisionRecord: DecisionRecord;
+  
+  /** LUMEN Score breakdown */
+  scoreBreakdown: LumenScoreBreakdown;
+  
+  /** Pack evaluation results */
+  packResults: Array<{
+    ruleId: string;
+    section: string;
+    title: string;
+    category: string;
+    severity: string;
+    passed: boolean;
+    reason: string;
+  }>;
+  
+  /** Summary of pack evaluation */
+  summary: {
+    packId: string;
+    packName: string;
+    totalRules: number;
+    passed: number;
+    failed: number;
+    criticalFailures: number;
+    highFailures: number;
+    mediumFailures: number;
+  };
+  
+  /** Whether the evaluation passed all critical rules */
+  passed: boolean;
+  
+  /** Timestamp of evaluation */
+  evaluatedAt: string;
 }
 
 /**
@@ -223,6 +291,7 @@ export class Lumen {
   private config: LumenConfig;
   private auditChain: AuditChain;
   private sessionId: string;
+  private apiClient?: LumenAPIClient;
   
   constructor(config?: Partial<LumenConfig>) {
     const fileConfig = loadConfigFile();
@@ -238,6 +307,14 @@ export class Lumen {
       ...(config || {}),
       tenantId: config?.tenantId || 'default',
     } as LumenConfig;
+    
+    // Initialize API client if API key provided
+    if (this.config.apiKey) {
+      this.apiClient = new LumenAPIClient({
+        apiKey: this.config.apiKey,
+        baseUrl: this.config.apiConfig?.baseUrl
+      });
+    }
     
     this.sessionId = this.generateSessionId();
     this.auditChain = new AuditChain(
@@ -255,6 +332,9 @@ export class Lumen {
     if (this.config.debug) {
       console.log(`[LUMEN-SDK] Initialized v${SDK_VERSION}`);
       console.log(`[LUMEN-SDK] Domain: ${this.config.domain}, Region: ${this.config.region}`);
+      if (this.apiClient) {
+        console.log(`[LUMEN-SDK] API client configured`);
+      }
     }
   }
   
@@ -377,6 +457,178 @@ export class Lumen {
   }
   
   /**
+   * Evaluate context against a specific policy pack.
+   * 
+   * If API key is configured, tries hosted packs first and falls back to bundled.
+   * If no API key, uses bundled packs only.
+   * 
+   * @param packId The policy pack ID (e.g., 'ca-on-phipa', 'us-fed-hipaa')
+   * @param context The evaluation context for the pack
+   * @returns Detailed pack evaluation results
+   */
+  async evaluateWithPack(
+    packId: string,
+    context: PhipaContext | HipaaContext
+  ): Promise<EvaluateWithPackResult> {
+    const startTime = Date.now();
+    
+    if (this.config.debug) {
+      console.log(`[LUMEN-SDK:EVALUATE-PACK] Evaluating against ${packId}...`);
+    }
+    
+    // Cast context to the appropriate type for the pack
+    const typedContext = context as Record<string, unknown>;
+    
+    // Try API first if available
+    if (this.apiClient) {
+      try {
+        const apiResult = await this.apiClient.evaluate(packId, typedContext);
+        return this.transformAPIResult(packId, apiResult, startTime);
+      } catch (error) {
+        if (this.config.debug) {
+          console.log(`[LUMEN-SDK:EVALUATE-PACK] API evaluation failed, falling back to bundled: ${(error as Error).message}`);
+        }
+        // Fall through to bundled packs
+      }
+    }
+    
+    // Use bundled packs
+    const pack = getPackById(packId);
+    if (!pack) {
+      throw new Error(`Policy pack not found: ${packId}. Available packs: ${Object.keys({ 'ca-on-phipa': true, 'us-fed-hipaa': true }).join(', ')}`);
+    }
+    
+    // Evaluate all rules
+    const packResults: Array<{
+      ruleId: string;
+      section: string;
+      title: string;
+      category: string;
+      severity: string;
+      passed: boolean;
+      reason: string;
+    }> = [];
+    
+    let criticalFailures = 0;
+    let highFailures = 0;
+    let mediumFailures = 0;
+    let passed = 0;
+    
+    for (const rule of pack.rules) {
+      const result = rule.evaluator(typedContext);
+      
+      packResults.push({
+        ruleId: rule.id,
+        section: rule.section,
+        title: rule.title,
+        category: rule.category,
+        severity: rule.severity,
+        passed: result.pass,
+        reason: result.reason
+      });
+      
+      if (result.pass) {
+        passed++;
+      } else {
+        if (rule.severity === 'critical') criticalFailures++;
+        else if (rule.severity === 'high') highFailures++;
+        else mediumFailures++;
+      }
+    }
+    
+    // Create a minimal decision record for this evaluation
+    const decisionRecord = createDecisionRecord({
+      tenantId: this.config.tenantId!,
+      subjectId: (context as Record<string, unknown>)?.subjectId as string || 'anonymous',
+      workflowId: 'pack-evaluation',
+      requestContext: {
+        userRole: 'SYSTEM',
+        requestedAt: new Date().toISOString(),
+        sessionId: this.sessionId
+      },
+      inputs: {
+        inputsHash: this.hashContent(JSON.stringify(context)),
+        dataCategories: Object.keys(context)
+      },
+      aiOutputs: {
+        modelId: 'pack-evaluator',
+        modelVersion: '1.0',
+        retrievedSources: [],
+        outputHash: this.hashContent(JSON.stringify(packResults)),
+        latencyMs: Date.now() - startTime
+      },
+      humanAction: {
+        action: 'ACCEPTED',
+        actorId: 'system',
+        actionAt: new Date().toISOString()
+      },
+      policyContext: {
+        packId: packId,
+        packVersion: pack.version,
+        requiredChecks: pack.rules.map(r => r.id),
+        enforcementMode: this.config.enforcementMode!
+      }
+    });
+    
+    // Calculate LUMEN Score based on pack results
+    const scoreBreakdown = this.calculatePackBasedScore(criticalFailures, highFailures, mediumFailures);
+    
+    const summary = {
+      packId: pack.id,
+      packName: pack.name,
+      totalRules: pack.rules.length,
+      passed,
+      failed: criticalFailures + highFailures + mediumFailures,
+      criticalFailures,
+      highFailures,
+      mediumFailures
+    };
+    
+    // Evaluation passes if no critical failures
+    const evaluationPassed = criticalFailures === 0;
+    
+    if (this.config.debug) {
+      console.log(`[LUMEN-SDK:EVALUATE-PACK] Complete. Passed: ${passed}/${pack.rules.length}, Critical failures: ${criticalFailures}`);
+    }
+    
+    return {
+      decisionRecord,
+      scoreBreakdown,
+      packResults,
+      summary,
+      passed: evaluationPassed,
+      evaluatedAt: new Date().toISOString()
+    };
+  }
+  
+  /**
+   * Get available policy packs.
+   * Returns hosted packs if API key configured, otherwise bundled packs.
+   */
+  async getAvailablePacks(): Promise<PackSummary[]> {
+    // Try API first
+    if (this.apiClient) {
+      try {
+        return await this.apiClient.listPacks();
+      } catch (error) {
+        if (this.config.debug) {
+          console.log(`[LUMEN-SDK] API list packs failed, using bundled: ${(error as Error).message}`);
+        }
+      }
+    }
+    
+    // Return bundled packs
+    return listAvailablePacks();
+  }
+  
+  /**
+   * Get the API client instance (if configured)
+   */
+  getAPIClient(): LumenAPIClient | undefined {
+    return this.apiClient;
+  }
+  
+  /**
    * Get audit trail for this session
    */
   getAuditTrail(): AuditEvent[] {
@@ -398,6 +650,121 @@ export class Lumen {
   }
   
   // Private methods
+  
+  private transformAPIResult(
+    packId: string,
+    apiResult: PackEvaluationResponse,
+    startTime: number
+  ): EvaluateWithPackResult {
+    const packResults = apiResult.results.map(r => ({
+      ruleId: r.ruleId,
+      section: r.section,
+      title: r.title,
+      category: 'compliance', // API doesn't return category
+      severity: r.severity,
+      passed: r.passed,
+      reason: r.reason
+    }));
+    
+    const decisionRecord = createDecisionRecord({
+      tenantId: this.config.tenantId!,
+      subjectId: 'anonymous',
+      workflowId: 'pack-evaluation-api',
+      requestContext: {
+        userRole: 'SYSTEM',
+        requestedAt: new Date().toISOString(),
+        sessionId: this.sessionId
+      },
+      inputs: {
+        inputsHash: 'api-evaluation',
+        dataCategories: []
+      },
+      aiOutputs: {
+        modelId: 'api-pack-evaluator',
+        modelVersion: '1.0',
+        retrievedSources: [],
+        outputHash: this.hashContent(JSON.stringify(apiResult)),
+        latencyMs: Date.now() - startTime
+      },
+      humanAction: {
+        action: 'ACCEPTED',
+        actorId: 'api',
+        actionAt: new Date().toISOString()
+      },
+      policyContext: {
+        packId: packId,
+        packVersion: 'api',
+        requiredChecks: apiResult.results.map(r => r.ruleId),
+        enforcementMode: this.config.enforcementMode!
+      }
+    });
+    
+    const scoreBreakdown = this.calculatePackBasedScore(
+      apiResult.summary.criticalFailures,
+      0,
+      0
+    );
+    
+    return {
+      decisionRecord,
+      scoreBreakdown,
+      packResults,
+      summary: {
+        packId: apiResult.packId,
+        packName: apiResult.packId, // API doesn't return name
+        totalRules: apiResult.summary.totalRules,
+        passed: apiResult.summary.passed,
+        failed: apiResult.summary.failed,
+        criticalFailures: apiResult.summary.criticalFailures,
+        highFailures: 0,
+        mediumFailures: 0
+      },
+      passed: apiResult.summary.criticalFailures === 0,
+      evaluatedAt: apiResult.timestamp
+    };
+  }
+  
+  private calculatePackBasedScore(
+    criticalFailures: number,
+    highFailures: number,
+    mediumFailures: number
+  ): LumenScoreBreakdown {
+    // Start with a base score
+    let baseScore = 85;
+    
+    // Deduct for failures
+    baseScore -= criticalFailures * 25;
+    baseScore -= highFailures * 10;
+    baseScore -= mediumFailures * 5;
+    
+    // Clamp to 0-100
+    baseScore = Math.max(0, Math.min(100, baseScore));
+    
+    const riskRadar = {
+      legal: criticalFailures > 0 ? 'Red' as const : highFailures > 0 ? 'Amber' as const : 'Green' as const,
+      labour: 'Green' as const,
+      safety: 'Green' as const,
+      ethics: 'Green' as const,
+      cyber: 'Green' as const,
+      finance: 'Green' as const,
+      reputation: criticalFailures > 0 ? 'Amber' as const : 'Green' as const
+    };
+    
+    return {
+      finalScore: Math.round(baseScore),
+      baseScore,
+      riskModifier: 1.0,
+      factors: [{
+        name: 'Policy Compliance',
+        confidence: criticalFailures === 0 ? 'Strong' as const : 'Limited' as const,
+        numericScore: Math.round(baseScore),
+        weight: 1.0,
+        contribution: baseScore
+      }],
+      riskRadar,
+      fatalFlawDetected: criticalFailures > 2
+    };
+  }
   
   private calculateLumenScore(input: EvaluateInput): LumenScoreBreakdown {
     // Simplified scoring for MVP
