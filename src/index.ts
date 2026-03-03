@@ -75,9 +75,10 @@ import {
 export * from './primitives';
 export * from './packs';
 export * from './api-client';
+export * from './cortex';
 
 // SDK Version
-export const SDK_VERSION = '1.0.0';
+export const SDK_VERSION = '2.0.0';
 
 // Configuration types
 export interface LumenConfig {

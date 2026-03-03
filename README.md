@@ -368,6 +368,108 @@ LUMEN SDK™ is built by [Forge Health](https://forgehealth.ai) — AI Activatio
 
 ---
 
+---
+
+## CORTEX Runtime — Full Pipeline Evaluation
+
+For production deployments that need the full LUMEN runtime stack (Scanner Intelligence → Policy Packs → CORTEX scoring), use the `LumenClient`:
+
+```typescript
+import { LumenClient } from '@forgehealth/lumen-sdk';
+
+const lumen = new LumenClient({
+  apiKey: 'lk_live_...',
+  cortexUrl: 'https://cortex.forgelumen.ca',           // default
+  policyUrl: 'https://api.forgelumen.ca',               // default
+  scannerUrl: 'https://api-intelligence.forgelumen.ca',  // default
+  debug: true,  // structured logs
+});
+
+// Full pipeline: Scanner → Policy Packs → CORTEX → unified result
+const result = await lumen.evaluate({
+  llmOutput: "Patient should receive 500mg acetaminophen every 6 hours...",
+  useCase: "medication-dosing-assistant",
+  jurisdiction: "on-ca",           // Ontario, Canada
+  clinicalDomain: "clinical-decision-support",
+  constraints: { noPHI: true, maxLatency: 50 },
+});
+
+console.log(result.lumenScore);      // 82
+console.log(result.confidence);      // 'high'
+console.log(result.goNoGo);          // 'GO'
+console.log(result.auditTrailId);    // 'at_abc123...'
+console.log(result.policiesApplied); // [{ packId: 'ca-on-phipa', ... }]
+console.log(result.activeSignals);   // [{ title: 'PHIPA Amendment 2026', ... }]
+console.log(result.warnings);        // [] (or ['Scanner unavailable...'] on degradation)
+console.log(result.latency);         // { totalMs: 142, scannerMs: 38, policyMs: 22, cortexMs: 82 }
+```
+
+### Pipeline Flow
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│ 1. Scanner API  │────▶│ 2. Policy Packs  │────▶│  3. CORTEX API  │
+│ /v1/signals     │     │ /v1/packs        │     │  /v1/evaluate   │
+│ (regulatory     │     │ (governance      │     │  (scoring +     │
+│  signals)       │     │  rules)          │     │   evaluation)   │
+└─────────────────┘     └──────────────────┘     └────────┬────────┘
+        ▲                                                  │
+        │ graceful                                         ▼
+        │ degradation                              Unified Result
+        │ on failure                          (score, audit trail,
+        └───────────────────────────────────   policies, signals)
+```
+
+### Convenience Methods
+
+```typescript
+// Quick score without the full pipeline
+const quick = await lumen.score(domainAssessments, 'on-ca');
+
+// Retrieve a stored audit trail record
+const trail = await lumen.getAuditTrail('at_abc123...');
+
+// List applicable frameworks for a jurisdiction
+const frameworks = await lumen.getFrameworks('on-ca');
+
+// Get rules from a specific policy pack
+const pack = await lumen.getPolicies('ca-on-phipa');
+
+// Get active regulatory signals
+const signals = await lumen.getSignals('on-ca');
+```
+
+### Error Handling
+
+```typescript
+import {
+  LumenAuthError,
+  LumenRateLimitError,
+  LumenEvaluationError,
+  LumenNetworkError,
+} from '@forgehealth/lumen-sdk';
+
+try {
+  const result = await lumen.evaluate({ ... });
+} catch (err) {
+  if (err instanceof LumenAuthError) {
+    // Invalid or expired API key
+  } else if (err instanceof LumenRateLimitError) {
+    // Back off — err.retryAfterMs tells you how long
+  } else if (err instanceof LumenEvaluationError) {
+    // CORTEX couldn't evaluate (check err.details)
+  } else if (err instanceof LumenNetworkError) {
+    // err.service tells you which service failed ('cortex' | 'policy' | 'scanner')
+  }
+}
+```
+
+### Existing `Lumen` Class (Local Governance)
+
+The original `Lumen` class is still available for local/offline governance without backend services. Use `LumenClient` when you need the full CORTEX runtime stack.
+
+---
+
 **Ready to make AI decisions defensible?**
 
 ```bash
@@ -375,3 +477,7 @@ npm install @forgehealth/lumen-sdk
 ```
 
 [Documentation](https://github.com/forge-health-ai/lumen-sdk#readme) · [API Reference](https://github.com/forge-health-ai/lumen-sdk/blob/main/docs/API_REFERENCE.md) · [Contact](mailto:lumen-sdk@forgehealth.ai)
+
+---
+
+© 2026 Forge Partners Inc. All rights reserved. CONFIDENTIAL AND PROPRIETARY.
