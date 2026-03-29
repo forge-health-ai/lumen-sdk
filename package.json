@@ -70,7 +70,7 @@
     "interoperability"
   ],
   "author": "Forge Partners Inc. <lumen-sdk@forgehealth.ai>",
-  "license": "Apache-2.0",
+  "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://forgelumen.ca",
   "engines": {
     "node": ">=18"
