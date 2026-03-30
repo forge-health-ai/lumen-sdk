@@ -69,7 +69,7 @@
     "fhir",
     "interoperability"
   ],
-  "author": "Forge Partners Inc. <lumen-sdk@forgehealth.ai>",
+  "author": "FORGE Partners Inc. <lumen-sdk@forgehealth.ai>",
   "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://forgelumen.ca",
   "engines": {
